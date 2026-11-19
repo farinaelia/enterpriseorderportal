@@ -1,8 +1,10 @@
 # Enterprise Order Portal (prototype)
 
-A Flask + SQLite prototype of an enterprise ordering portal for a telco, with
-three roles. **All data is fictional.** Passwords are not checked (prototype
-shortcut): use the *Prototype access* buttons on the sign-in page.
+This is part of my Work-Based Learning phase 2 project with the company I am currently interning at.
+The title of the main project is **Design and Development of a Web-Based Order Submission and Tracking Portal For Telecommunications Services**. 
+It is a based on a real-life project with an existing client. Though, **all data here is fictional**.
+Passwords are not checked (prototype shortcut): use the *Prototype access* buttons on the sign-in page.
+This portal has three roles:
 
 **Role**       | **What They Can Do**
 **Dealer**     |    Dashboard, create orders in a 6-step wizard, save drafts, upload documents, submit, track status, fix and resubmit returned orders

@@ -6,10 +6,13 @@ It is a based on a real-life project with an existing client. Though, **all data
 Passwords are not checked (prototype shortcut): use the *Prototype access* buttons on the sign-in page.
 This portal has three roles:
 
-**Role**       | **What They Can Do**
-**Dealer**     |    Dashboard, create orders in a 6-step wizard, save drafts, upload documents, submit, track status, fix and resubmit returned orders
-**Processor**  |    Work queue, review an order, approve (reference ID is generated), request an amendment, mark completed
-**Admin**      |    Read-only overview, all orders, status history, users, reports, CSV export
+# Roles  
+
+**Dealer**  = Dashboard, create orders in a 6-step wizard, save drafts, upload documents, submit, track status, fix and resubmit returned orders
+
+**Processor** = Work queue, review an order, approve (reference ID is generated), request an amendment, mark completed
+
+**Admin** = Read-only overview, all orders, status history, users, reports, CSV export
 
 # Order lifecycle
 

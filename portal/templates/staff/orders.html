@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, status_pill %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ title }}</h1><p class="muted">{{ subtitle }}</p></div></div>
+<section class="card">
+  <form class="filters" method="get" action="{{ url_for(endpoint) }}">
+    <div class="input-icon grow">{{ icon('search', 15) }}
+      <input type="search" name="q" value="{{ f.q }}" placeholder="Search order number or company"></div>
+    <select name="status" onchange="this.form.submit()">
+      <option value="">All statuses</option>
+      {% for s in status_choices %}<option value="{{ s }}" {{ 'selected' if s == f.status }}>{{ s }}</option>{% endfor %}
+    </select>
+    <select name="type" onchange="this.form.submit()">
+      <option value="">All order types</option>
+      {% for t in C.ORDER_TYPES %}<option value="{{ t }}" {{ 'selected' if t == f.order_type }}>{{ t }}</option>{% endfor %}
+    </select>
+    {% if dealers %}
+    <select name="dealer" onchange="this.form.submit()">
+      <option value="">All dealers</option>
+      {% for d in dealers %}<option value="{{ d.id }}" {{ 'selected' if d.id|string == f.dealer }}>{{ d.name }}</option>{% endfor %}
+    </select>{% endif %}
+    <button class="btn btn-outline" type="submit">Apply</button>
+    {% if f.q or f.status or f.order_type or f.dealer %}<a class="link-strong small" href="{{ url_for(endpoint) }}">Clear filters</a>{% endif %}
+  </form>
+  <div class="table-scroll"><table class="table">
+    <thead><tr><th>Order number</th><th>Company</th><th>Dealer</th><th>Submitted</th><th>Status</th><th>Reference ID</th><th></th></tr></thead>
+    <tbody>
+      {% for o in orders %}
+      <tr class="{{ 'row-amend' if o.status == 'Amendment Required' }}">
+        <td><span class="mono">{{ o.order_number }}</span>{% if o.submissions > 1 %}<div class="muted tiny">Submission #{{ o.submissions }}</div>{% endif %}</td>
+        <td><b>{{ o.company_name or '—' }}</b><div class="muted small">{{ o.order_type or '—' }}</div></td>
+        <td>{{ o.dealer_name }}</td>
+        <td class="muted">{{ o.submitted_at|date }}</td>
+        <td>{{ status_pill(o.status) }}</td>
+        <td>{% if o.reference_id %}<span class="mono ref">{{ o.reference_id }}</span>{% else %}<span class="muted">&mdash;</span>{% endif %}</td>
+        <td class="right"><a class="link-strong" href="{{ url_for(detail_endpoint, order_number=o.order_number) }}">Open {{ icon('chevron-right', 13) }}</a></td>
+      </tr>
+      {% else %}<tr><td colspan="7" class="muted center pad">No orders match your filters.</td></tr>{% endfor %}
+    </tbody></table></div>
+  <div class="table-foot"><span class="muted small">Showing <b>{{ orders|length }}</b> order{{ 's' if orders|length != 1 }}</span></div>
+</section>
+{% endblock %}

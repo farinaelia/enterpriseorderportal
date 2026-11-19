@@ -1,0 +1,40 @@
+{# Customer information card. Sensitive numbers are masked with filters. #}
+{% from "_macros.html" import icon %}
+<section class="card">
+  <div class="card-head">
+    <h2>Customer information</h2>
+    {% if review_step %}<a class="link-strong small" href="{{ url_for('wizard.edit', order_number=order.order_number, step=review_step) }}">{{ icon('pencil', 12) }} Edit</a>{% endif %}
+  </div>
+  <div class="card-body">
+    <div class="chips">
+      <span class="tag-blue">{{ order.customer_type or '—' }}</span>
+      <span class="small muted">{{ icon('shield', 13) }} Sensitive identifiers are masked</span>
+    </div>
+
+    <h3 class="section-label">COMPANY DETAILS</h3>
+    <div class="fields-3">
+      <div><dt>Company Name</dt><dd>{{ order.company_name or '—' }}</dd></div>
+      <div><dt>New Business Registration Number</dt><dd>{{ order.brn|mask_brn }}</dd></div>
+      <div><dt>Old Business Registration Number</dt><dd>{{ order.old_brn or 'Not provided' }}</dd></div>
+      <div><dt>Tax Identification Number</dt><dd>{{ order.tin or 'Not provided' }}</dd></div>
+      <div><dt>Sales and Service Tax Number</dt><dd>{{ order.sst_no or 'Not provided' }}</dd></div>
+      <div><dt>Existing Account Number</dt><dd>{{ order.existing_account_no|mask_account }}</dd></div>
+    </div>
+
+    <h3 class="section-label">CORRESPONDENCE ADDRESS</h3>
+    <div class="fields-3">
+      <div><dt>Correspondence Address</dt><dd>{{ order.address or '—' }}</dd></div>
+      <div><dt>City / State</dt><dd>{{ order.city or '—' }}</dd></div>
+      <div><dt>Postcode</dt><dd>{{ order.postcode or '—' }}</dd></div>
+    </div>
+
+    <h3 class="section-label">PRIMARY CONTACT</h3>
+    <div class="fields-3">
+      <div><dt>Primary Contact Name</dt><dd>{{ order.contact_name or '—' }}</dd></div>
+      <div><dt>Primary Contact Identification Number</dt><dd>{{ order.contact_id_no|mask_id }}</dd></div>
+      <div><dt>Primary Contact Designation</dt><dd>{{ order.contact_designation or '—' }}</dd></div>
+      <div><dt>Primary Contact Number</dt><dd>{{ order.contact_phone or '—' }}</dd></div>
+      <div><dt>Primary Contact Email</dt><dd>{{ order.contact_email or '—' }}</dd></div>
+    </div>
+  </div>
+</section>

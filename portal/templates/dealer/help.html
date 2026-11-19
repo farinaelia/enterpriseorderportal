@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, status_pill %}
+{% block title %}Help{% endblock %}
+
+{% block content %}
+<nav class="breadcrumb">
+  <a href="{{ url_for('dealer.dashboard') }}">Dashboard</a> {{ icon('chevron-right', 12) }} <b>Help</b>
+</nav>
+<div class="page-head">
+  <div>
+    <h1>Help</h1>
+    <p class="muted">How the order workflow works.</p>
+  </div>
+</div>
+
+<div class="two-col help-grid">
+  <section class="card faq">
+    {# <details> is built into HTML: click to open/close, no JavaScript needed #}
+    <details>
+      <summary>{{ icon('help-circle', 15) }} Why can&rsquo;t I edit my order? {{ icon('chevron-down', 14) }}</summary>
+      <p>Orders are locked while they are <b>Submitted</b>, <b>Under Review</b>, <b>Approved</b> or <b>Completed</b>, so the Processor always reviews exactly what you sent. You can edit a Draft at any time, and an order returned for amendment is unlocked for the sections the Processor asked you to correct.</p>
+    </details>
+    <details>
+      <summary>{{ icon('help-circle', 15) }} What happens when an order is returned? {{ icon('chevron-down', 14) }}</summary>
+      <p>The status changes to <b>Amendment Required</b>. You will see the Processor&rsquo;s reason and which sections need correction. Fix those sections and resubmit. The order keeps the same order number and goes back into the queue.</p>
+    </details>
+    <details>
+      <summary>{{ icon('help-circle', 15) }} Where do I find the reference ID? {{ icon('chevron-down', 14) }}</summary>
+      <p>The reference ID is issued by the Processor when the order is approved. It then appears in the order header and in the Reference ID column of My Orders.</p>
+    </details>
+    <details>
+      <summary>{{ icon('help-circle', 15) }} Which file types can I upload? {{ icon('chevron-down', 14) }}</summary>
+      <p>PDF, JPG, PNG and XLSX files, up to 10 MB per file.</p>
+    </details>
+  </section>
+
+  <aside class="card glossary">
+    <h2>Status glossary</h2>
+    {% for s in C.STATUSES %}
+    <div class="glossary-item">
+      {{ status_pill(s) }}
+      <p class="muted small">{{ C.WHAT_HAPPENS_NEXT[s] }}</p>
+    </div>
+    {% endfor %}
+  </aside>
+</div>
+{% endblock %}

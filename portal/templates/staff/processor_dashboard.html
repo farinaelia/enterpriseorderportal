@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, status_pill %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-head"><div>
+  <h1>{{ greeting }}, {{ first_name }}</h1>
+  <p class="muted">{{ counts['Submitted'] }} order{{ 's' if counts['Submitted'] != 1 }} waiting to be picked up, {{ counts['Under Review'] }} in review.</p></div>
+  <a class="btn btn-primary" href="{{ url_for('processor.queue') }}">{{ icon('list-check', 16) }} Open work queue</a></div>
+
+<div class="stat-row four">
+  {% for s, ic in [('Submitted', 'send'), ('Under Review', 'scan'), ('Amendment Required', 'alert'), ('Approved', 'check-circle')] %}
+  <a class="stat-card" href="{{ url_for('processor.all_orders', status=s) }}">
+    <span class="stat-icon {{ 'warn' if s == 'Amendment Required' }}">{{ icon(ic, 16) }}</span>
+    <span class="stat-num">{{ counts[s] }}</span><span class="stat-label">{{ s }}</span></a>
+  {% endfor %}
+</div>
+
+<section class="card">
+  <div class="card-head"><div><h2>Next in the queue</h2><p class="muted small">Oldest first. Your actions today: {{ mine }}</p></div>
+    <a class="link-strong small" href="{{ url_for('processor.queue') }}">View all</a></div>
+  <div class="table-scroll"><table class="table">
+    <thead><tr><th>Order</th><th>Company</th><th>Dealer</th><th>Submitted</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for o in waiting %}
+      <tr><td class="mono">{{ o.order_number }}</td><td><b>{{ o.company_name }}</b></td><td>{{ o.dealer_name }}</td>
+        <td class="muted">{{ o.submitted_at|date }}</td><td>{{ status_pill(o.status) }}</td>
+        <td class="right"><a class="btn btn-outline btn-sm" href="{{ url_for('processor.order_detail', order_number=o.order_number) }}">{{ 'Start review' if o.status == 'Submitted' else 'Continue' }}</a></td></tr>
+    {% else %}<tr><td colspan="6" class="muted center pad">The queue is empty. Nice work.</td></tr>{% endfor %}
+    </tbody></table></div>
+</section>
+{% endblock %}

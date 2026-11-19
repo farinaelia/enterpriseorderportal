@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, status_pill %}
+{% block title %}Order submitted{% endblock %}
+{% block content %}
+<div class="card empty-state">
+  <div class="empty-icon success">{{ icon('check-circle', 28) }}</div>
+  <h1>{{ 'Order resubmitted' if order.submissions > 1 else 'Order submitted' }}</h1>
+  <p class="muted"><span class="mono">{{ order.order_number }}</span> for <b>{{ order.company_name }}</b> is now back with the processing team{% if order.submissions > 1 %} (submission #{{ order.submissions }}){% endif %}.</p>
+  <p>{{ status_pill(order.status) }}</p>
+  <div class="success-actions">
+    <a class="btn btn-primary" href="{{ url_for('dealer.order_detail', order_number=order.order_number) }}">View order</a>
+    <a class="btn btn-outline" href="{{ url_for('wizard.create') }}">{{ icon('file-plus', 15) }} Create another order</a>
+    <a class="btn btn-outline" href="{{ url_for('dealer.dashboard') }}">Back to dashboard</a>
+  </div>
+</div>
+{% endblock %}

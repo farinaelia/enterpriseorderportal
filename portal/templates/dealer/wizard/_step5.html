@@ -1,0 +1,23 @@
+{% from "dealer/wizard/_fields.html" import field, select, textarea %}
+<section class="card">
+  <div class="card-head"><h2>Internal processing information</h2></div>
+  <div class="card-body">
+    <p class="muted small">Used by the processing team. The customer does not see this.</p>
+    <div class="fld-grid">
+      {{ field('partner_name', 'Partner or dealer name', values.partner_name, errors.partner_name, maxlength=100) }}
+      {{ select('channel', 'Channel', C.CHANNELS, values.channel, errors.channel, required=true) }}
+      {{ select('region', 'Region', C.REGIONS, values.region, errors.region, required=true) }}
+      {{ select('account_manager', 'Account manager', C.ACCOUNT_MANAGERS, values.account_manager, errors.account_manager, required=true) }}
+      {{ select('customer_category', 'Customer category', C.CUSTOMER_CATEGORIES, values.customer_category, errors.customer_category, required=true) }}
+      {{ field('site_contact_name', 'Site contact name', values.site_contact_name, errors.site_contact_name, maxlength=100) }}
+      {{ field('site_contact_number', 'Site contact number', values.site_contact_number, errors.site_contact_number, type='tel', hint='e.g. 012-345 6789') }}
+      {{ select('device_model', 'Device model', C.DEVICE_MODELS, values.device_model, errors.device_model, placeholder='None') }}
+      {{ field('device_quantity', 'Device quantity', values.device_quantity, errors.device_quantity, inputmode='numeric', maxlength=4) }}
+    </div>
+    <div class="fld-grid one-col">
+      {{ field('service_address', 'Service or delivery address', values.service_address, errors.service_address, maxlength=200) }}
+      {{ field('installation_address', 'Installation address', values.installation_address, errors.installation_address, maxlength=200, hint='Leave empty if it is the same as the service address') }}
+    </div>
+    {{ textarea('internal_notes', 'Internal notes', values.internal_notes, errors.internal_notes, maxlength=500, rows=3, hint='Optional') }}
+  </div>
+</section>

@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, status_pill %}
+{% block title %}{{ order.order_number }}{% endblock %}
+
+{% block content %}
+<nav class="breadcrumb">
+  <a href="{{ url_for('dealer.dashboard') }}">Dashboard</a> {{ icon('chevron-right', 12) }}
+  <a href="{{ url_for('dealer.orders') }}">My Orders</a> {{ icon('chevron-right', 12) }}
+  <b>{{ order.order_number }}</b>
+</nav>
+
+{# ---------- amendment banner (only when the order was returned) ---------- #}
+{% if order.status == 'Amendment Required' %}
+<div class="amend-banner">
+  <span class="amend-icon">{{ icon('alert', 20) }}</span>
+  <div class="amend-body">
+    <div class="amend-title">
+      <b>Amendment Required</b>
+      <span class="small">Returned {{ order.amendment_at|dt }} by {{ order.amendment_by }} (Processor)</span>
+    </div>
+    <div class="amend-cat">{{ order.amendment_category|upper }}</div>
+    <blockquote>&ldquo;{{ order.amendment_reason }}&rdquo;</blockquote>
+    <div class="chips">
+      <span class="small"><b>Sections requiring correction:</b></span>
+      {% for s in b.amend_sections %}<span class="chip">{{ icon('pencil', 11) }} {{ s }}</span>{% endfor %}
+    </div>
+    {% if order.amendment_due %}
+    <div class="small amend-due">{{ icon('calendar', 12) }} Please resubmit by {{ order.amendment_due|date }} (prototype guidance)</div>
+    {% endif %}
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('wizard.edit', order_number=order.order_number) }}">{{ icon('pencil', 15) }} Edit and Resubmit</a>
+</div>
+{% endif %}
+
+{# ---------- header card with progress bar ---------- #}
+<section class="card order-head">
+  <div class="order-head-top">
+    <div>
+      <div class="order-id">
+        <span class="mono">{{ order.order_number }}</span>
+        {{ status_pill(order.status) }}
+        {% if order.submissions > 1 %}<span class="tag-grey">Submission #{{ order.submissions }}</span>{% endif %}
+      </div>
+      <h1>{{ order.company_name or 'Untitled draft' }}</h1>
+      <dl class="meta">
+        <div><dt>Order type</dt><dd>{{ order.order_type or '—' }}</dd></div>
+        <div><dt>Dealer</dt><dd>{{ current_user.name }}</dd></div>
+        <div><dt>Created</dt><dd>{{ order.created_at|date }}</dd></div>
+        <div><dt>Last updated</dt><dd>{{ order.updated_at|dt }}</dd></div>
+      </dl>
+    </div>
+    <div class="order-head-right">
+      {% if order.reference_id %}
+      <div class="ref-box has-ref">
+        <small>{{ icon('check', 10) }} REFERENCE ID</small>
+        <div class="ref-line">
+          <span class="mono">{{ order.reference_id }}</span>
+          <button type="button" class="icon-btn" data-copy="{{ order.reference_id }}" title="Copy reference ID">{{ icon('copy', 14) }}</button>
+        </div>
+      </div>
+      {% else %}
+      <div class="ref-box"><small>REFERENCE ID</small><div class="muted small">Issued after approval</div></div>
+      {% endif %}
+      {% if b.locked %}<span class="locked-badge">{{ icon('lock', 12) }} Editing locked</span>{% endif %}
+    </div>
+  </div>
+
+  {% include "dealer/_progress.html" %}
+</section>
+
+{# ---------- tabs + side column ---------- #}
+{% set tabs = [('overview', 'Overview'), ('customer', 'Customer Information'),
+               ('subscription', 'Subscription Details'), ('documents', 'Documents'),
+               ('activity', 'Activity History')] %}
+{% set flagged_tabs = {'subscription': 'Subscription Details', 'documents': 'Supporting Documents'} %}
+
+<div class="detail-grid">
+  <div class="detail-main">
+    <div class="tabs">
+      {% for key, label in tabs %}
+      <a class="tab {{ 'active' if tab == key }}"
+         href="{{ url_for('dealer.order_detail', order_number=order.order_number, tab=key) }}">
+        {{ label }}
+        {% if key in flagged_tabs and order.status == 'Amendment Required' and flagged_tabs[key] in b.amend_sections %}
+          <i class="tab-dot"></i>
+        {% endif %}
+        {% if key == 'activity' %}<span class="tab-count">{{ b.events|length }}</span>{% endif %}
+      </a>
+      {% endfor %}
+    </div>
+
+    {% if tab == 'overview' %}
+      <section class="card"><div class="card-head"><h2>Order type</h2></div>
+        <div class="card-body fields-3">
+          <div><dt>Order Type</dt><dd>{{ order.order_type or '—' }}</dd></div>
+          <div><dt>Registration Type</dt><dd>{{ order.registration_type or '—' }}</dd></div>
+          <div><dt>Customer Type</dt><dd>{{ order.customer_type or '—' }}</dd></div>
+        </div>
+      </section>
+      {% include "dealer/_subscription.html" %}
+      {% include "dealer/_internal.html" %}
+    {% elif tab == 'customer' %}
+      {% include "dealer/_customer.html" %}
+    {% elif tab == 'subscription' %}
+      {% include "dealer/_subscription.html" %}
+    {% elif tab == 'documents' %}
+      {% include "dealer/_documents.html" %}
+    {% else %}
+      {% include "dealer/_activity.html" %}
+    {% endif %}
+  </div>
+
+  <aside class="detail-side">
+    {# ---- What happens next? ---- #}
+    <section class="card">
+      <div class="card-head side-head">{{ icon('compass', 15) }} <h2>What happens next?</h2></div>
+      <div class="card-body">
+        <p class="small">{{ C.WHAT_HAPPENS_NEXT[order.status] }}</p>
+
+        {% if order.status == 'Draft' %}
+          <a class="btn btn-primary btn-block" href="{{ url_for('wizard.edit', order_number=order.order_number) }}">{{ icon('pencil', 14) }} Continue draft</a>
+        {% elif order.status == 'Amendment Required' %}
+          <a class="btn btn-primary btn-block" href="{{ url_for('wizard.edit', order_number=order.order_number) }}">{{ icon('pencil', 14) }} Edit and Resubmit</a>
+        {% elif order.status == 'Under Review' %}
+          <div class="info-chip">{{ icon('scan', 13) }} Being validated by the processing team</div>
+        {% endif %}
+
+        {% if order.approved_by %}
+        <div class="success-box two">
+          <div><small>Approved by</small><b>{{ order.approved_by }}</b></div>
+          <div><small>Approved on</small><b>{{ order.approved_at|dt }}</b></div>
+        </div>
+        {% endif %}
+        {% if order.status == 'Completed' %}
+        <div class="success-box">
+          {{ icon('check-circle', 14) }}
+          Completed {{ order.completed_at|dt }} by {{ order.completed_by }}. This order is locked and cannot be edited.
+        </div>
+        {% endif %}
+      </div>
+    </section>
+
+    {# ---- At a glance ---- #}
+    <section class="card">
+      <div class="card-head"><h2>At a glance</h2></div>
+      <div class="card-body glance">
+        <div><span>Required documents</span>
+          <b class="{{ 'ok' if b.required_uploaded == b.required_total else 'bad' }}">{{ b.required_uploaded }}/{{ b.required_total }}</b></div>
+        <div><span>Subscription lines</span><b>{{ b.total_lines }}</b></div>
+        <div><span>Submissions</span><b>{{ order.submissions }}</b></div>
+        <div><span>Amendment cycles</span><b>{{ order.amendment_cycles }}</b></div>
+        <a class="btn btn-outline btn-block" href="{{ url_for('dealer.order_detail', order_number=order.order_number, tab='activity') }}">{{ icon('eye', 14) }} View activity history</a>
+      </div>
+    </section>
+
+    {# ---- Resolved amendments ---- #}
+    {% if b.resolved %}
+    <section class="card">
+      <div class="card-head side-head ok">{{ icon('check-circle', 15) }} <h2>Resolved amendments</h2></div>
+      <div class="card-body">
+        {% for r in b.resolved %}
+        <div class="resolved">
+          <b class="small">{{ r.category }}</b>
+          <p class="muted small">{{ r.reason }}</p>
+          <p class="small"><b>Dealer response:</b> {{ r.response }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

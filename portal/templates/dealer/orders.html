@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, status_pill %}
+{% block title %}My Orders{% endblock %}
+
+{% block content %}
+<nav class="breadcrumb">
+  <a href="{{ url_for('dealer.dashboard') }}">Dashboard</a> {{ icon('chevron-right', 12) }} <b>My Orders</b>
+</nav>
+
+<div class="page-head">
+  <div>
+    <h1>My Orders</h1>
+    <p class="muted">Every order you have created, including drafts.</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('wizard.create') }}">{{ icon('file-plus', 16) }} Create New Order</a>
+</div>
+
+<section class="card">
+  {# A normal HTML form using GET: the choices become ?status=...&type=... in the URL #}
+  <form class="filters" method="get" action="{{ url_for('dealer.orders') }}">
+    <div class="input-icon grow">
+      {{ icon('search', 15) }}
+      <input type="search" name="q" value="{{ q }}" placeholder="Search order number or company">
+    </div>
+    <select name="status" onchange="this.form.submit()">
+      <option value="">All statuses</option>
+      {% for s in C.STATUSES %}<option value="{{ s }}" {{ 'selected' if s == status }}>{{ s }}</option>{% endfor %}
+    </select>
+    <select name="type" onchange="this.form.submit()">
+      <option value="">All order types</option>
+      {% for t in C.ORDER_TYPES %}<option value="{{ t }}" {{ 'selected' if t == order_type }}>{{ t }}</option>{% endfor %}
+    </select>
+    <select name="date" onchange="this.form.submit()">
+      <option value="">Any date</option>
+      <option value="today" {{ 'selected' if date_range == 'today' }}>Today</option>
+      <option value="7" {{ 'selected' if date_range == '7' }}>Last 7 days</option>
+      <option value="30" {{ 'selected' if date_range == '30' }}>Last 30 days</option>
+      <option value="year" {{ 'selected' if date_range == 'year' }}>This year</option>
+    </select>
+    <button class="btn btn-outline" type="submit">Apply</button>
+    {% if q or status or order_type or date_range %}
+      <a class="link-strong small" href="{{ url_for('dealer.orders') }}">Clear filters</a>
+    {% endif %}
+  </form>
+
+  <div class="table-scroll">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Order number</th><th>Company</th><th>Last updated</th>
+          <th>Status</th><th>Reference ID</th><th>Next action</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in orders %}
+        <tr class="{% if o.status == 'Amendment Required' %}row-amend{% endif %}">
+          <td>
+            <span class="mono">{{ o.order_number }}</span>
+            {% if o.submissions > 1 %}<div class="muted tiny">Submission #{{ o.submissions }}</div>{% endif %}
+          </td>
+          <td><b>{{ o.company_name or 'Untitled draft' }}</b><div class="muted small">{{ o.order_type or 'Order type not chosen' }}</div></td>
+          <td class="muted">{{ o.updated_at|date }}</td>
+          <td>{{ status_pill(o.status) }}</td>
+          <td>{% if o.reference_id %}<span class="mono ref">{{ o.reference_id }}</span>{% else %}<span class="muted">&mdash;</span>{% endif %}</td>
+          <td class="{{ 'next-action' if o.status == 'Amendment Required' else 'muted' }}">{{ C.DEALER_NEXT_ACTION[o.status] }}</td>
+          <td class="right"><a class="link-strong" href="{{ url_for('dealer.order_detail', order_number=o.order_number) }}">View {{ icon('chevron-right', 13) }}</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="muted center pad">No orders match your filters.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="table-foot">
+    <span class="muted small">Showing {% if orders %}<b>1&ndash;{{ orders|length }}</b>{% else %}<b>0</b>{% endif %} of <b>{{ orders|length }}</b></span>
+    <span class="pager"><span class="page-btn active">1</span></span>
+  </div>
+</section>
+{% endblock %}

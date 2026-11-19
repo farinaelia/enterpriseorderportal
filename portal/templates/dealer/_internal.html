@@ -1,0 +1,21 @@
+{# Internal processing information card #}
+<section class="card">
+  <div class="card-head"><h2>Internal processing information</h2>{% if review_step %}<a class="link-strong small" href="{{ url_for('wizard.edit', order_number=order.order_number, step=review_step) }}">{{ icon('pencil', 12) }} Edit</a>{% endif %}</div>
+  <div class="card-body">
+    <div class="fields-3">
+      <div><dt>Partner or Dealer Name</dt><dd>{{ order.partner_name or '—' }}</dd></div>
+      <div><dt>Channel</dt><dd>{{ order.channel or '—' }}</dd></div>
+      <div><dt>Region</dt><dd>{{ order.region or '—' }}</dd></div>
+      <div><dt>Account Manager</dt><dd>{{ order.account_manager or '—' }}</dd></div>
+      <div><dt>Customer Category</dt><dd>{{ order.customer_category or '—' }}</dd></div>
+      <div><dt>Contact Name</dt><dd>{{ order.site_contact_name or '—' }}</dd></div>
+      <div><dt>Contact Number</dt><dd>{{ order.site_contact_number or '—' }}</dd></div>
+      <div><dt>Device Model</dt><dd>{{ order.device_model or '—' }}</dd></div>
+      <div><dt>Device Quantity</dt><dd>{{ order.device_quantity if order.device_quantity is not none else '—' }}</dd></div>
+    </div>
+    <div class="field-block"><dt>Service or Delivery Address</dt><dd>{{ order.service_address or '—' }}</dd></div>
+    <div class="field-block"><dt>Installation Address</dt><dd>{{ order.installation_address or 'Same as service address' }}</dd></div>
+    <div class="field-block"><dt>Internal Notes</dt>
+      <dd>{% if order.internal_notes %}{{ order.internal_notes or '—' }}{% else %}<span class="muted">Not provided</span>{% endif %}</dd></div>
+  </div>
+</section>

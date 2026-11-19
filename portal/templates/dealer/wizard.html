@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}Create Order{% endblock %}
+
+{% block content %}
+<nav class="breadcrumb">
+  <a href="{{ url_for('dealer.dashboard') }}">Dashboard</a> {{ icon('chevron-right', 12) }}
+  <a href="{{ url_for('dealer.orders') }}">My Orders</a> {{ icon('chevron-right', 12) }}
+  <b>{{ order.order_number if order else 'Create New Order' }}</b>
+</nav>
+
+<div class="page-head">
+  <div>
+    <h1>{{ 'Edit and Resubmit' if amend_sections is defined else ('Continue Draft' if order else 'Create New Order') }}</h1>
+    <p class="muted">Step {{ step }} of 6 &middot; {{ step_title }}</p>
+  </div>
+  <div class="wz-chips">
+    {% if order %}<span class="mono chip-plain">{{ order.order_number }}</span>{% endif %}
+    <span class="save-chip" id="save-chip" data-saved="{{ 'yes' if order else 'no' }}">
+      {% if order %}{{ icon('check', 12) }} {{ 'Draft saved' if order.status == 'Draft' else 'Saved' }} at {{ order.updated_at|time }}
+      {% else %}Not saved yet{% endif %}
+    </span>
+  </div>
+</div>
+
+{% if amend_sections is defined %}
+<div class="amend-banner">
+  <span class="amend-icon">{{ icon('alert', 20) }}</span>
+  <div class="amend-body">
+    <div class="amend-title"><b>Amendment Required</b>
+      <span class="small">Returned {{ order.amendment_at|dt }} by {{ order.amendment_by }}</span></div>
+    <div class="amend-cat">{{ order.amendment_category|upper }}</div>
+    <blockquote>&ldquo;{{ order.amendment_reason }}&rdquo;</blockquote>
+    <div class="chips"><span class="small"><b>Sections to correct:</b></span>
+      {% for sct in amend_sections %}<span class="chip">{{ icon('pencil', 11) }} {{ sct }}</span>{% endfor %}</div>
+    {% if order.amendment_due %}<div class="small amend-due">{{ icon('calendar', 12) }} Please resubmit by {{ order.amendment_due|date }}</div>{% endif %}
+  </div>
+</div>
+{% endif %}
+
+{# ---------- numbered stepper ---------- #}
+<ol class="wz-steps">
+  {% for n, name in C.WIZARD_STEPS %}
+  {% set state = 'current' if n == step else ('done' if done[n] else 'todo') %}
+  <li class="wz-step wz-{{ state }}">
+    {% if order and n != step %}
+    <a href="{{ url_for('wizard.edit', order_number=order.order_number, step=n) }}">
+    {% else %}<span class="wz-link">{% endif %}
+      <i class="wz-dot">{% if state == 'done' %}{{ icon('check', 13) }}{% else %}{{ n }}{% endif %}</i>
+      {% if amend_steps is defined and n in amend_steps %}<span class="flag-dot" title="Correction requested"></span>{% endif %}
+      <span class="wz-name">{{ name }}</span>
+    {% if order and n != step %}</a>{% else %}</span>{% endif %}
+  </li>
+  {% endfor %}
+</ol>
+
+{% if banner %}<div class="alert alert-error wz-banner" role="alert">{{ icon('alert', 15) }} {{ banner }}</div>{% endif %}
+
+{% if order %}
+  {% set action_url = url_for('wizard.edit', order_number=order.order_number, step=step) %}
+{% else %}
+  {% set action_url = url_for('wizard.create') %}
+{% endif %}
+
+{# ---------- the buttons at the bottom of every step ---------- #}
+{% macro footer(show_save=true, next_label='Continue') %}
+<div class="wz-footer">
+  <div>
+    {% if step > 1 %}<button class="btn btn-outline" type="submit" name="action" value="back">{{ icon('arrow-left', 15) }} Back</button>{% endif %}
+  </div>
+  <div class="wz-footer-right">
+    {% if show_save %}<button class="btn btn-outline" type="submit" name="action" value="save">{{ icon('save', 15) }} Save Draft</button>{% endif %}
+    {% if step < 6 %}<button class="btn btn-primary" type="submit" name="action" value="next">{{ next_label }} {{ icon('arrow-right', 15) }}</button>
+    {% else %}<button class="btn btn-primary" type="button" id="open-submit" data-ready="{{ 1 if ready else 0 }}">{{ icon('send', 15) }} {{ 'Resubmit Order' if amend_sections is defined else 'Submit Order' }}</button>{% endif %}
+  </div>
+</div>
+{% endmacro %}
+
+{% if step in (4, 6) %}
+  {# Steps 4 and 6 contain their own forms (uploads / submit), so the
+     navigation buttons get a separate small form. #}
+  {% include "dealer/wizard/_step%d.html"|format(step) %}
+  <form method="post" action="{{ action_url }}" class="card wz-nav">
+    <input type="hidden" name="step" value="{{ step }}">
+    {{ footer(show_save=(step == 4)) }}
+  </form>
+{% else %}
+  <form method="post" action="{{ action_url }}" class="wz-form" id="wizard-form" novalidate
+        data-prices='{{ C.RATE_PLANS|tojson }}' data-ctype="{{ values.customer_type or 'Corporate Account' }}">
+    <input type="hidden" name="step" value="{{ step }}">
+    {# Pressing Enter in a text box "clicks" the first submit button: make it Continue #}
+    <button type="submit" name="action" value="next" class="default-btn" tabindex="-1" aria-hidden="true"></button>
+    {% include "dealer/wizard/_step%d.html"|format(step) %}
+    <div class="card wz-nav">{{ footer() }}</div>
+  </form>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}<script src="{{ url_for('static', filename='js/wizard.js') }}"></script>{% endblock %}

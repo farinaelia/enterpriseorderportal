@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, logo %}
+{% block title %}Sign in{% endblock %}
+
+{# This page replaces the whole body (no sidebar), so we override "body". #}
+{% block body %}
+<div class="login-page">
+  <div class="login-logo">
+    {{ logo(34) }}
+    <span class="brand-text dark"><b>Enterprise Order</b><small>PORTAL</small></span>
+  </div>
+
+  <div class="login-card">
+    <h1>Sign in</h1>
+    <p class="muted center">Submit, track and manage enterprise orders in one place.</p>
+
+    {# Messages from flash() in auth.py appear here #}
+    {% with messages = get_flashed_messages() %}
+      {% for m in messages %}<div class="alert alert-error">{{ m }}</div>{% endfor %}
+    {% endwith %}
+
+    <form method="post" action="{{ url_for('auth.login') }}" class="login-form">
+      <label for="email">Email address <span class="req">*</span></label>
+      <div class="input-icon">
+        {{ icon('mail', 16) }}
+        <input id="email" name="email" type="email" required value="syufaiq@example.com" autocomplete="username">
+      </div>
+
+      <label for="password">Password <span class="req">*</span></label>
+      <div class="input-icon">
+        {{ icon('lock', 16) }}
+        <input id="password" name="password" type="password" value="prototype" autocomplete="current-password">
+        <button type="button" class="eye" data-toggle-password="password" aria-label="Show password">{{ icon('eye', 16) }}</button>
+      </div>
+
+      <div class="row-between">
+        <label class="check"><input type="checkbox" name="remember" checked> Remember me</label>
+        <a href="#" class="link-strong small">Forgot password?</a>
+      </div>
+
+      <button class="btn btn-primary btn-block" type="submit">Sign in {{ icon('arrow-right', 15) }}</button>
+    </form>
+
+    <div class="divider-label"><span>PROTOTYPE ACCESS</span></div>
+    <div class="proto-access">
+      {% for role in ['dealer', 'processor', 'admin'] %}
+      <form method="post" action="{{ url_for('auth.login_as', role=role) }}">
+        <button class="btn btn-outline btn-block" type="submit">{{ role|capitalize }}</button>
+      </form>
+      {% endfor %}
+    </div>
+  </div>
+
+  <p class="login-foot">{{ icon('shield', 13) }} Authorised use only. Activity is logged for audit purposes.<br>All data shown is fictional.</p>
+</div>
+{% endblock %}

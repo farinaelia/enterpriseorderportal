@@ -1,0 +1,53 @@
+{% from "_macros.html" import icon %}
+{% set complete = b.required_uploaded == b.required_total %}
+{% set pct = (b.required_uploaded / b.required_total * 100)|round|int %}
+<section class="card">
+  <div class="card-head"><h2>Supporting documents</h2></div>
+  <div class="card-body">
+    <div class="progress-box {{ 'complete' if complete }}">
+      <b class="small">{{ b.required_uploaded }} of {{ b.required_total }} required documents uploaded</b>
+      <div class="progress"><div class="progress-fill" style="width: {{ pct }}%"></div></div>
+    </div>
+    <p class="muted small">Accepted: PDF, JPG, PNG or XLSX, up to {{ C.MAX_UPLOAD_MB }} MB each. Uploading again replaces the old file.</p>
+
+    <ul class="doc-list">
+      {% for s in slots %}
+      <li class="doc-row dropzone {{ 'missing' if s.required and not s.file }}">
+        <span class="doc-icon {{ 'bad' if s.required and not s.file }}">{{ icon('file' if s.file else 'upload', 16) }}</span>
+        <div class="doc-info">
+          <b>{{ s.label }}</b>
+          <span class="req-tag {{ 'opt' if not s.required }}">{{ 'REQUIRED' if s.required else 'OPTIONAL' }}</span>
+          {% if s.file %}
+            <div class="muted small">{{ s.file.filename }} &middot; {{ s.file.file_type }} &middot; {{ '%.2f'|format(s.file.size_mb) }} MB</div>
+          {% elif s.required %}
+            <div class="bad small"><b>Missing &mdash; not uploaded</b></div>
+          {% else %}
+            <div class="muted small">Not uploaded</div>
+          {% endif %}
+        </div>
+        <div class="doc-actions">
+          {% if s.file %}
+            <a class="btn btn-outline btn-sm" target="_blank" rel="noopener"
+               href="{{ url_for('dealer.document_preview', order_number=order.order_number, doc_id=s.file.id) }}">{{ icon('eye', 13) }} Preview</a>
+            <form method="post" action="{{ url_for('wizard.remove', order_number=order.order_number, doc_id=s.file.id) }}">
+              <button class="btn btn-outline btn-sm danger" type="submit">{{ icon('trash', 13) }} Remove</button>
+            </form>
+          {% endif %}
+          <form method="post" enctype="multipart/form-data" class="upload-form"
+                action="{{ url_for('wizard.upload', order_number=order.order_number) }}">
+            <input type="hidden" name="doc_key" value="{{ s.key }}">
+            <label class="btn btn-outline btn-sm file-btn">{{ icon('upload', 13) }} {{ 'Replace' if s.file else 'Choose file' }}
+              <input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png,.xlsx" data-autosubmit>
+            </label>
+            <noscript><button class="btn btn-primary btn-sm" type="submit">Upload</button></noscript>
+          </form>
+          <form method="post" action="{{ url_for('wizard.sample', order_number=order.order_number) }}">
+            <input type="hidden" name="doc_key" value="{{ s.key }}">
+            <button class="btn btn-outline btn-sm" type="submit" title="Prototype shortcut: attach a generated sample PDF">Use sample</button>
+          </form>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>

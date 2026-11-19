@@ -1,0 +1,23 @@
+{% from "dealer/wizard/_fields.html" import select %}
+{% from "_macros.html" import icon %}
+<section class="card">
+  <div class="card-head"><h2>What kind of order is this?</h2></div>
+  <div class="card-body">
+    <p class="muted small">Choose the order type. It decides which rate plans and documents apply later.</p>
+    <div class="choice-grid {{ 'has-error' if errors.order_type }}">
+      {% for t in C.ORDER_TYPES %}
+      {% set info = C.ORDER_TYPE_INFO[t] %}
+      <label class="choice">
+        <input type="radio" name="order_type" value="{{ t }}" {{ 'checked' if values.order_type == t }}>
+        <span class="choice-icon">{{ icon(info[0], 20) }}</span>
+        <span class="choice-text"><b>{{ t }}</b><small>{{ info[1] }}</small></span>
+      </label>
+      {% endfor %}
+    </div>
+    {% if errors.order_type %}<p class="fld-error">{{ errors.order_type }}</p>{% endif %}
+
+    <div class="fld-grid one-third">
+      {{ select('registration_type', 'Registration type', C.REGISTRATION_TYPES, values.registration_type, errors.registration_type, required=true) }}
+    </div>
+  </div>
+</section>

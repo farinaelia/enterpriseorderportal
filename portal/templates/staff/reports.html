@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Reports</h1><p class="muted">Simple figures from the current data.</p></div>
+  <a class="btn btn-primary" href="{{ url_for('admin.export_csv') }}">{{ icon('upload', 15) }} Export orders (CSV)</a></div>
+<div class="stat-row four">
+  <div class="stat-card"><span class="stat-num">{{ r.submitted }}</span><span class="stat-label">Orders submitted</span></div>
+  <div class="stat-card"><span class="stat-num">{{ r.approve_rate }}%</span><span class="stat-label">Approved or completed</span></div>
+  <div class="stat-card"><span class="stat-num">{{ r.amend_rate }}%</span><span class="stat-label">Needed an amendment</span></div>
+  <div class="stat-card"><span class="stat-num small-num">{{ r.value|money }}</span><span class="stat-label">Monthly value approved</span></div>
+</div>
+<div class="two-col">
+  <section class="card"><div class="card-head"><h2>Orders by status</h2></div><div class="card-body">
+    {% set mx = r.by_status.values()|max or 1 %}
+    {% for s, n in r.by_status.items() %}
+    <div class="bar-row"><span>{{ s }}</span><div class="bar"><i style="width: {{ (n / mx * 100)|round|int }}%"></i></div><b>{{ n }}</b></div>
+    {% endfor %}</div></section>
+  <section class="card"><div class="card-head"><h2>Orders by type</h2></div><div class="card-body">
+    {% set mt = (r.by_type|map(attribute='c')|max) or 1 %}
+    {% for t in r.by_type %}
+    <div class="bar-row"><span>{{ t.t }}</span><div class="bar"><i style="width: {{ (t.c / mt * 100)|round|int }}%"></i></div><b>{{ t.c }}</b></div>
+    {% endfor %}</div></section>
+</div>
+{% endblock %}

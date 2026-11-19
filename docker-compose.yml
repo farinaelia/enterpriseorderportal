@@ -1,0 +1,15 @@
+# Start with:  docker compose up --build      Stop with:  docker compose down
+services:
+  portal:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      # Change this to a long random string for anything other than a demo.
+      SECRET_KEY: "change-me-to-a-long-random-string"
+    volumes:
+      - portal-data:/data      # keeps the database and uploads between restarts
+    restart: unless-stopped
+
+volumes:
+  portal-data:

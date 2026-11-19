@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, status_pill %}
+{% block title %}Status History{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Status History</h1><p class="muted">Every action taken on every order, newest first (latest 300).</p></div></div>
+<section class="card">
+  <form class="filters" method="get" action="{{ url_for('admin.history') }}">
+    <div class="input-icon grow">{{ icon('search', 15) }}<input type="search" name="q" value="{{ q }}" placeholder="Order number, person or action"></div>
+    <select name="status" onchange="this.form.submit()"><option value="">All statuses</option>
+      {% for s in C.STATUSES %}<option {{ 'selected' if s == status }}>{{ s }}</option>{% endfor %}</select>
+    <select name="role" onchange="this.form.submit()"><option value="">All roles</option>
+      {% for r in ['Dealer', 'Processor', 'Admin'] %}<option {{ 'selected' if r == role }}>{{ r }}</option>{% endfor %}</select>
+    <button class="btn btn-outline" type="submit">Apply</button>
+  </form>
+  <div class="table-scroll"><table class="table">
+    <thead><tr><th>When</th><th>Order</th><th>Action</th><th>Status</th><th>By</th><th>Note</th></tr></thead>
+    <tbody>
+    {% for e in events %}
+      <tr><td class="muted">{{ e.ts|dt }}</td>
+        <td><a class="mono" href="{{ url_for('admin.order_detail', order_number=e.order_number) }}">{{ e.order_number }}</a></td>
+        <td><b>{{ e.title }}</b></td><td>{{ status_pill(e.status) if e.status }}</td>
+        <td>{{ e.actor }} <span class="tag-grey">{{ e.actor_role }}</span></td><td class="muted small">{{ e.note or '' }}</td></tr>
+    {% else %}<tr><td colspan="6" class="muted center pad">No events match.</td></tr>{% endfor %}
+    </tbody></table></div>
+</section>
+{% endblock %}

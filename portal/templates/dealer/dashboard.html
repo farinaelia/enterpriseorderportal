@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, status_pill %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ greeting }}, {{ first_name }}</h1>
+    <p class="muted">
+      {% if amendments %}
+        You have {{ amendments|length }} order{{ 's' if amendments|length != 1 }} that needs correction before processing can continue.
+      {% else %}
+        No orders need correction right now.
+      {% endif %}
+    </p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('wizard.create') }}">{{ icon('file-plus', 16) }} Create New Order</a>
+</div>
+
+{# ---- the two summary cards ---- #}
+<div class="stat-row">
+  <a class="stat-card" href="{{ url_for('dealer.orders', status='Draft') }}">
+    <span class="stat-icon">{{ icon('pencil', 16) }}</span>
+    <span class="stat-num">{{ drafts|length }}</span>
+    <span class="stat-label">Draft</span>
+  </a>
+  <a class="stat-card {% if amendments %}stat-action{% endif %}" href="{{ url_for('dealer.orders', status='Amendment Required') }}">
+    <span class="stat-icon warn">{{ icon('alert', 16) }}</span>
+    {% if amendments %}<span class="stat-tag">ACTION</span>{% endif %}
+    <span class="stat-num">{{ amendments|length }}</span>
+    <span class="stat-label">Amendment Required</span>
+  </a>
+</div>
+
+{# ---- recent orders table ---- #}
+<section class="card">
+  <div class="card-head">
+    <div>
+      <h2>Recent orders</h2>
+      <p class="muted small">Orders that need your action are shown first</p>
+    </div>
+  </div>
+  <div class="table-scroll">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Order number</th><th>Company</th><th>Order type</th>
+          <th>Submitted</th><th>Last updated</th><th>Status</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in orders %}
+        <tr class="{% if o.status == 'Amendment Required' %}row-amend{% endif %}">
+          <td class="mono">{{ o.order_number }}</td>
+          <td><b>{{ o.company_name or 'Untitled draft' }}</b></td>
+          <td class="muted">{{ o.order_type or '—' }}</td>
+          <td class="muted">{{ o.submitted_at|date }}</td>
+          <td class="muted">{{ o.updated_at|date }}</td>
+          <td>{{ status_pill(o.status) }}</td>
+          <td class="right"><a class="link-strong" href="{{ url_for('dealer.order_detail', order_number=o.order_number) }}">View {{ icon('chevron-right', 13) }}</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="muted center pad">You have no orders yet. Click <b>Create New Order</b> to start.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{# ---- bottom row: action list + guidance ---- #}
+<div class="two-col">
+  <section class="card">
+    <div class="card-head">
+      <h2>Action required</h2>
+      <span class="count-badge">{{ action_orders|length }}</span>
+    </div>
+    {% for o in action_orders %}
+    <div class="action-item">
+      <span class="action-icon {{ 'warn' if o.status == 'Amendment Required' else '' }}">
+        {{ icon('alert' if o.status == 'Amendment Required' else 'pencil', 16) }}
+      </span>
+      <div class="action-body">
+        <div class="mono small">{{ o.order_number }}</div>
+        <b>{{ o.company_name or 'Untitled draft' }}</b>
+        {% if o.status == 'Amendment Required' %}
+          <p class="muted small clamp-2">{{ o.amendment_reason }}</p>
+          <a class="btn btn-primary btn-sm" href="{{ url_for('dealer.order_detail', order_number=o.order_number) }}">Review and resubmit {{ icon('arrow-right', 13) }}</a>
+        {% else %}
+          <p class="muted small">Draft last saved {{ o.updated_at|dt }}. Complete the remaining steps to submit.</p>
+          <a class="btn btn-outline btn-sm" href="{{ url_for('wizard.edit', order_number=o.order_number) }}">Continue draft {{ icon('arrow-right', 13) }}</a>
+        {% endif %}
+      </div>
+    </div>
+    {% else %}
+    <p class="muted pad">Nothing needs your attention. Nice work.</p>
+    {% endfor %}
+  </section>
+
+  <aside class="tips-card">
+    <div class="tips-title">{{ icon('lightbulb', 15) }} WHAT TO DO NEXT</div>
+    <p><b>1. Fix amendments first.</b> Returned orders keep their order number. Correct the highlighted sections and resubmit.</p>
+    <p><b>2. Finish drafts.</b> Upload all required documents before submitting.</p>
+    <p><b>3. Track progress.</b> Orders under review are locked. You will see the reference ID after approval.</p>
+  </aside>
+</div>
+{% endblock %}

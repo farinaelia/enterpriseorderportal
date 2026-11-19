@@ -1,0 +1,50 @@
+{% from "_macros.html" import icon %}
+{# Form-field building blocks. Each macro draws a label, the input and (if the
+   server found a problem) a red message underneath.
+
+   Use:  {% from "dealer/wizard/_fields.html" import field, select %}
+         {{ field('city', 'City', values.city, errors.city, required=true) }}
+#}
+
+{% macro field(name, label, value, error, required=false, hint='', placeholder='',
+               maxlength=none, type='text', sensitive='', corp_star=false, cls='', inputmode='') -%}
+<div class="fld {{ cls }} {{ 'has-error' if error }}">
+  <label for="{{ name }}">{{ label }}
+    {%- if required %} <span class="req">*</span>{% endif -%}
+    {%- if corp_star %} <span class="req corp-only">*</span>{% endif %}</label>
+  <div class="fld-input">
+    <input id="{{ name }}" name="{{ name }}" type="{{ type }}" value="{{ value or '' }}"
+           {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+           {% if maxlength %}maxlength="{{ maxlength }}"{% endif %}
+           {% if inputmode %}inputmode="{{ inputmode }}"{% endif %}
+           {% if sensitive %}data-sensitive="{{ sensitive }}" autocomplete="off"{% endif %}
+           {% if error %}aria-invalid="true"{% endif %}>
+    {% if sensitive %}<button type="button" class="eye" data-reveal="{{ name }}" aria-label="Show value">{{ icon('eye', 15) }}</button>{% endif %}
+  </div>
+  {% if error %}<p class="fld-error">{{ error }}</p>{% elif hint %}<p class="fld-hint">{{ hint }}</p>{% endif %}
+</div>
+{%- endmacro %}
+
+
+{% macro select(name, label, options, value, error, required=false, placeholder='Select...', cls='', attrs='') -%}
+<div class="fld {{ cls }} {{ 'has-error' if error }}">
+  <label for="{{ name }}">{{ label }}{% if required %} <span class="req">*</span>{% endif %}</label>
+  <select id="{{ name }}" name="{{ name }}" {{ attrs|safe }} {% if error %}aria-invalid="true"{% endif %}>
+    <option value="">{{ placeholder }}</option>
+    {% for o in options %}<option value="{{ o }}" {{ 'selected' if o|string == value|string }}>{{ o }}{% if o is number %} months{% endif %}</option>{% endfor %}
+  </select>
+  {% if error %}<p class="fld-error">{{ error }}</p>{% endif %}
+</div>
+{%- endmacro %}
+
+
+{% macro textarea(name, label, value, error, maxlength=200, rows=3, hint='', required=false) -%}
+<div class="fld {{ 'has-error' if error }}">
+  <label for="{{ name }}">{{ label }}{% if required %} <span class="req">*</span>{% endif %}</label>
+  <textarea id="{{ name }}" name="{{ name }}" rows="{{ rows }}" data-count="{{ maxlength }}">{{ value or '' }}</textarea>
+  <div class="fld-foot">
+    {% if error %}<p class="fld-error">{{ error }}</p>{% else %}<p class="fld-hint">{{ hint }}</p>{% endif %}
+    <span class="counter tiny muted" data-counter-for="{{ name }}">0 / {{ maxlength }}</span>
+  </div>
+</div>
+{%- endmacro %}

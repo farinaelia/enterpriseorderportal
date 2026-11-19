@@ -1,0 +1,79 @@
+{% from "dealer/wizard/_fields.html" import field, select, textarea %}
+{% from "_macros.html" import icon %}
+{% set lines = values.lines %}
+<div class="wz-split">
+<div class="wz-main">
+  {% if errors.lines %}<div class="alert alert-error">{{ errors.lines }}</div>{% endif %}
+
+  {% for ln in lines %}
+  {% set i = loop.index0 %}
+  {% set p = 'l%d_'|format(i) %}
+  <section class="card line-card" data-line>
+    <div class="card-head">
+      <h2>Subscription line {{ loop.index }}</h2>
+      <div class="line-actions">
+        <button class="btn btn-outline btn-sm" type="submit" name="action" value="dup_line:{{ i }}">{{ icon('copy', 13) }} Duplicate</button>
+        {% if lines|length > 1 %}<button class="btn btn-outline btn-sm danger" type="submit" name="action" value="del_line:{{ i }}">{{ icon('trash', 13) }} Delete</button>{% endif %}
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="fld-grid">
+        {{ select(p ~ 'registration_type', 'Registration type', C.REGISTRATION_TYPES, ln.registration_type, errors[p ~ 'registration_type'], required=true) }}
+        {{ select(p ~ 'rate_plan', 'Rate plan', plans, ln.rate_plan, errors[p ~ 'rate_plan'], required=true, attrs='data-plan') }}
+        {{ field(p ~ 'monthly', 'Monthly (RM per line)', ln.monthly, errors[p ~ 'monthly'], required=true, inputmode='decimal', hint='Filled in from the plan; you may adjust it') }}
+        {{ field(p ~ 'num_lines', 'Number of lines', ln.num_lines, errors[p ~ 'num_lines'], required=true, inputmode='numeric', maxlength=3) }}
+        {{ select(p ~ 'contract_months', 'Contract period', C.CONTRACT_MONTHS, ln.contract_months, errors[p ~ 'contract_months'], required=true, placeholder='Select period...') }}
+        {{ select(p ~ 'billing_type', 'Billing type', C.BILLING_TYPES, ln.billing_type, errors[p ~ 'billing_type'], required=true) }}
+      </div>
+
+      <div class="checks">
+        <fieldset><legend>Add-ons</legend>
+          {% for a in C.ADDONS %}<label class="check"><input type="checkbox" name="{{ p }}addons" value="{{ a }}" {{ 'checked' if a in ln.addons }}> {{ a }}</label>{% endfor %}
+        </fieldset>
+        <fieldset><legend>Services</legend>
+          {% for s in C.SERVICES %}<label class="check"><input type="checkbox" name="{{ p }}services" value="{{ s }}" {{ 'checked' if s in ln.services }}> {{ s }}</label>{% endfor %}
+        </fieldset>
+      </div>
+
+      <h3 class="section-label">DEVICE (OPTIONAL)</h3>
+      <div class="fld-grid">
+        {{ select(p ~ 'device_model', 'Device model', C.DEVICE_MODELS, ln.device_model, errors[p ~ 'device_model'], placeholder='None', attrs='data-device') }}
+        {{ field(p ~ 'device_qty', 'Device quantity', ln.device_qty, errors[p ~ 'device_qty'], inputmode='numeric', maxlength=4) }}
+        {{ field(p ~ 'device_price', 'Device price (RM each)', ln.device_price, errors[p ~ 'device_price'], inputmode='decimal') }}
+        {{ field(p ~ 'upfront', 'Other upfront charge (RM)', ln.upfront, errors[p ~ 'upfront'], inputmode='decimal') }}
+        {{ field(p ~ 'deposit', 'Deposit (RM)', ln.deposit, errors[p ~ 'deposit'], inputmode='decimal') }}
+        <div class="fld"><label>&nbsp;</label>
+          <label class="check pad-top"><input type="checkbox" name="{{ p }}fixed_ip" {{ 'checked' if ln.fixed_ip }}> Fixed IP address</label></div>
+      </div>
+      {{ field(p ~ 'notes', 'Line notes', ln.notes, errors[p ~ 'notes'], maxlength=200, hint='Optional') }}
+    </div>
+  </section>
+  {% endfor %}
+  <input type="hidden" name="line_count" value="{{ lines|length }}">
+
+  <button class="btn btn-outline add-line" type="submit" name="action" value="add_line">{{ icon('plus', 15) }} Add another line</button>
+
+  <section class="card">
+    <div class="card-head"><h2>Other requirements</h2></div>
+    <div class="card-body">
+      {% from "dealer/wizard/_fields.html" import textarea %}
+      {{ textarea('other_requirements', 'Anything else the processor should know?', values.other_requirements, errors.other_requirements, maxlength=500, rows=3, hint='Optional') }}
+    </div>
+  </section>
+</div>
+
+<aside class="wz-side">
+  <section class="card summary-card" id="summary">
+    <div class="card-head"><h2>Order summary</h2></div>
+    <div class="card-body">
+      <dl class="sum-list">
+        <div><dt>Lines</dt><dd data-sum="lines">0</dd></div>
+        <div><dt>Line items</dt><dd data-sum="items">0</dd></div>
+        <div><dt>Monthly commitment</dt><dd data-sum="monthly">RM 0.00</dd></div>
+        <div><dt>Upfront payment</dt><dd data-sum="upfront">RM 0.00</dd></div>
+      </dl>
+      <p class="tiny muted">Estimates update as you type.</p>
+    </div>
+  </section>
+</aside>
+</div>

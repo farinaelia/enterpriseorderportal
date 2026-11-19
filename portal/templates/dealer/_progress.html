@@ -1,0 +1,30 @@
+{# The five-step progress bar. Needs `order` and `b`. #}
+{% from "_macros.html" import icon %}
+  {% set step_icons = {'Draft': 'pencil', 'Submitted': 'send', 'Under Review': 'scan', 'Approved': 'check-circle', 'Completed': 'check-circle'} %}
+  <ol class="stepper">
+    {% for s in b.steps %}
+    <li class="step step-{{ s.state }}">
+      <span class="step-dot">
+        {% if s.state == 'done' %}{{ icon('check', 14) }}{% else %}{{ icon(step_icons[s.name], 14) }}{% endif %}
+      </span>
+      <b>{{ s.name }}</b>
+      <small>
+        {% if s.state == 'done' and s.date %}{{ s.date|date }}
+        {% elif s.state == 'current' %}Current
+        {% else %}Pending{% endif %}
+      </small>
+      {# the little "Amendment Required > Resubmitted" pill hangs under Under Review #}
+      {% if s.name == 'Under Review' and order.amendment_cycles > 0 %}
+        <span class="step-sub {{ 'open' if order.status == 'Amendment Required' else 'closed' }}">
+          <span class="a">{{ icon('alert', 11) }} Amendment Required</span>
+          {{ icon('chevron-right', 10) }}
+          <span class="b">Resubmitted</span>
+        </span>
+        <small class="step-sub-note">
+          {% if order.status == 'Amendment Required' %}Awaiting Dealer correction
+          {% else %}{{ order.amendment_cycles }} amendment cycle{{ 's' if order.amendment_cycles != 1 }}{% endif %}
+        </small>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ol>

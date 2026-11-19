@@ -1,0 +1,60 @@
+{# Subscription summary card. Used on the Overview and Subscription tabs. #}
+{% from "_macros.html" import icon %}
+{# The Billing and Fixed IP columns only appear on the Subscription tab #}
+{% set wide = tab == 'subscription' %}
+{% set flagged = order.status == 'Amendment Required' and 'Subscription Details' in b.amend_sections %}
+
+<section class="card {{ 'card-amend' if flagged }}">
+  <div class="card-head">
+    <h2>Subscription summary</h2>
+    {% if flagged %}<span class="stat-tag">CORRECTION REQUESTED</span>{% endif %}
+    {% if review_step %}<a class="link-strong small" href="{{ url_for('wizard.edit', order_number=order.order_number, step=review_step) }}">{{ icon('pencil', 12) }} Edit</a>{% endif %}
+  </div>
+  <div class="card-body">
+    <div class="kpis">
+      <div><small>TOTAL LINES</small><b>{{ b.total_lines }}</b></div>
+      <div><small>EST. MONTHLY COMMITMENT</small><b>{{ b.monthly|money }}</b></div>
+      <div><small>EST. UPFRONT PAYMENT</small><b>{{ b.upfront|money }}</b></div>
+    </div>
+
+    <div class="table-scroll">
+      <table class="table table-compact">
+        <thead>
+          <tr>
+            <th>#</th><th>Registration</th><th>Rate plan</th><th>Add-ons</th>
+            <th>Monthly</th><th>Lines</th><th>Contract</th><th>Device</th>
+            <th>Upfront</th>{% if wide %}<th>Billing</th><th>Fixed IP</th>{% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for l in b.lines %}
+          <tr>
+            <td class="muted">{{ loop.index }}</td>
+            <td>{{ l.registration_type }}</td>
+            <td><b>{{ l.rate_plan }}</b></td>
+            <td>{{ l.addons or '—' }}</td>
+            <td>{{ l.monthly|money }}</td>
+            <td>{{ l.num_lines }}</td>
+            <td>{{ l.contract_months }} Months</td>
+            <td>
+              {% if l.device_model %}<span title="{{ l.device_qty }} @ {{ l.device_price|money }} each">{{ l.device_model }} &times; {{ l.device_qty }}</span>{% else %}&mdash;{% endif %}
+            </td>
+            <td>{{ ((l.device_qty or 0) * (l.device_price or 0) + (l.upfront or 0) + (l.deposit or 0))|money }}</td>
+            {% if wide %}<td>{{ l.billing_type }}</td>
+            <td>{{ 'Yes' if l.fixed_ip else 'No' }}</td>{% endif %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% for l in b.lines if l.notes %}
+      <p class="small note-line"><b>Line {{ l.position }} note:</b> {{ l.notes }}</p>
+    {% endfor %}
+
+    <div class="field-block">
+      <dt>Other requirements</dt>
+      <dd>{% if order.other_requirements %}{{ order.other_requirements }}{% else %}<span class="muted">Not provided</span>{% endif %}</dd>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}Users{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Users</h1><p class="muted">All portal accounts. Managing users is outside this prototype.</p></div></div>
+<section class="card"><div class="table-scroll"><table class="table">
+  <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Team</th><th>Region</th><th>Status</th><th>Last active</th><th>Orders</th></tr></thead>
+  <tbody>{% for u in users %}
+    <tr><td><span class="avatar sm">{{ u.name|initials }}</span> <b>{{ u.name }}</b></td><td class="muted">{{ u.email }}</td>
+      <td><span class="tag-blue">{{ u.role|capitalize }}</span></td><td>{{ u.team }}</td><td>{{ u.region }}</td>
+      <td class="{{ 'ok' if u.status == 'Active' else 'muted' }}">{{ u.status }}</td>
+      <td class="muted">{{ u.last_active|dt if u.last_active }}</td><td>{{ u.order_count if u.role == 'dealer' else '—' }}</td></tr>
+  {% endfor %}</tbody></table></div></section>
+{% endblock %}

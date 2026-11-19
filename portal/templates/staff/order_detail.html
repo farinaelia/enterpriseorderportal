@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, status_pill %}
+{% block title %}{{ order.order_number }}{% endblock %}
+
+{% block content %}
+{% set home = 'processor.queue' if current_user.role == 'processor' else 'admin.all_orders' %}
+<nav class="breadcrumb">
+  <a href="{{ url_for(home) }}">{{ 'Work Queue' if current_user.role == 'processor' else 'All Orders' }}</a>
+  {{ icon('chevron-right', 12) }} <b>{{ order.order_number }}</b>
+</nav>
+
+{% if order.status == 'Amendment Required' %}
+<div class="amend-banner">
+  <span class="amend-icon">{{ icon('alert', 20) }}</span>
+  <div class="amend-body">
+    <div class="amend-title"><b>Waiting for the dealer</b>
+      <span class="small">Returned {{ order.amendment_at|dt }} by {{ order.amendment_by }}</span></div>
+    <div class="amend-cat">{{ order.amendment_category|upper }}</div>
+    <blockquote>&ldquo;{{ order.amendment_reason }}&rdquo;</blockquote>
+    <div class="chips">
+      {% for s in b.amend_sections %}<span class="chip">{{ icon('pencil', 11) }} {{ s }}</span>{% endfor %}
+      {% if order.amendment_due %}<span class="small amend-due">Due {{ order.amendment_due|date }}</span>{% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<section class="card order-head">
+  <div class="order-head-top">
+    <div>
+      <div class="order-id">
+        <span class="mono">{{ order.order_number }}</span>{{ status_pill(order.status) }}
+        {% if order.submissions > 1 %}<span class="tag-grey">Submission #{{ order.submissions }}</span>{% endif %}
+      </div>
+      <h1>{{ order.company_name or 'Untitled' }}</h1>
+      <dl class="meta">
+        <div><dt>Order type</dt><dd>{{ order.order_type or '—' }}</dd></div>
+        <div><dt>Dealer</dt><dd>{{ order.dealer_name }}</dd></div>
+        <div><dt>Submitted</dt><dd>{{ order.submitted_at|date }}</dd></div>
+        <div><dt>Last updated</dt><dd>{{ order.updated_at|dt }}</dd></div>
+      </dl>
+    </div>
+    <div class="order-head-right">
+      {% if order.reference_id %}
+      <div class="ref-box has-ref"><small>{{ icon('check', 10) }} REFERENCE ID</small>
+        <div class="ref-line"><span class="mono">{{ order.reference_id }}</span>
+          <button type="button" class="icon-btn" data-copy="{{ order.reference_id }}" title="Copy">{{ icon('copy', 14) }}</button></div></div>
+      {% else %}<div class="ref-box"><small>REFERENCE ID</small><div class="muted small">Issued on approval</div></div>{% endif %}
+    </div>
+  </div>
+  {% include "dealer/_progress.html" %}
+</section>
+
+{% set tabs = [('overview', 'Overview'), ('customer', 'Customer Information'), ('subscription', 'Subscription Details'),
+               ('documents', 'Documents'), ('activity', 'Activity History')] %}
+<div class="detail-grid">
+  <div class="detail-main">
+    <div class="tabs">
+      {% for key, label in tabs %}
+      <a class="tab {{ 'active' if tab == key }}" href="{{ url_for(detail_endpoint, order_number=order.order_number, tab=key) }}">{{ label }}
+        {% if key == 'activity' %}<span class="tab-count">{{ b.events|length }}</span>{% endif %}</a>
+      {% endfor %}
+    </div>
+    {% if tab == 'overview' %}
+      <section class="card"><div class="card-head"><h2>Order type</h2></div>
+        <div class="card-body fields-3">
+          <div><dt>Order Type</dt><dd>{{ order.order_type or '—' }}</dd></div>
+          <div><dt>Registration Type</dt><dd>{{ order.registration_type or '—' }}</dd></div>
+          <div><dt>Customer Type</dt><dd>{{ order.customer_type or '—' }}</dd></div>
+        </div></section>
+      {% include "dealer/_subscription.html" %}
+      {% include "dealer/_internal.html" %}
+    {% elif tab == 'customer' %}{% include "dealer/_customer.html" %}
+    {% elif tab == 'subscription' %}{% include "dealer/_subscription.html" %}
+    {% elif tab == 'documents' %}{% include "dealer/_documents.html" %}
+    {% else %}{% include "dealer/_activity.html" %}{% endif %}
+  </div>
+
+  <aside class="detail-side">
+    <section class="card">
+      <div class="card-head side-head">{{ icon('compass', 15) }} <h2>{{ 'Review actions' if can_act else 'Status' }}</h2></div>
+      <div class="card-body">
+        <p class="small">{{ C.WHAT_HAPPENS_NEXT[order.status] if not can_act else {
+          'Submitted': 'Start the review to take ownership of this order.',
+          'Under Review': 'Check the details and documents, then approve or return the order.',
+          'Amendment Required': 'The dealer must correct the order and resubmit it.',
+          'Approved': 'Approved. Mark it completed once activation is confirmed.',
+          'Completed': 'This order is finished. No further action.'}[order.status] }}</p>
+
+        {% if can_act and order.status == 'Submitted' %}
+          <form method="post" action="{{ url_for('processor.start_review', order_number=order.order_number) }}">
+            <button class="btn btn-primary btn-block" type="submit">{{ icon('scan', 14) }} Start review</button></form>
+
+        {% elif can_act and order.status == 'Under Review' %}
+          <form method="post" action="{{ url_for('processor.approve', order_number=order.order_number) }}" class="act-form">
+            <label class="small" for="note">Approval note (optional)</label>
+            <input id="note" name="note" type="text" maxlength="300" placeholder="All documents verified.">
+            <button class="btn btn-primary btn-block" type="submit">{{ icon('check-circle', 14) }} Approve order</button>
+          </form>
+          <details class="amend-form" {{ 'open' if request.args.get('amend') }}>
+            <summary class="btn btn-outline btn-block">{{ icon('alert', 14) }} Request amendment</summary>
+            <form method="post" action="{{ url_for('processor.amend', order_number=order.order_number) }}" class="act-form">
+              <label class="small" for="category">Category</label>
+              <select id="category" name="category">
+                <option value="">Select...</option>
+                {% for c in amend_categories %}<option>{{ c }}</option>{% endfor %}
+              </select>
+              <fieldset class="checks-col"><legend class="small">Sections to correct</legend>
+                {% for s in amend_sections %}<label class="check"><input type="checkbox" name="sections" value="{{ s }}"> {{ s }}</label>{% endfor %}
+              </fieldset>
+              <label class="small" for="reason">Reason for the dealer</label>
+              <textarea id="reason" name="reason" rows="4" maxlength="500" placeholder="Explain exactly what must be corrected."></textarea>
+              <label class="small" for="due">Please resubmit by</label>
+              <input id="due" name="due" type="date" value="{{ default_due }}">
+              <button class="btn btn-primary btn-block" type="submit">Send back to dealer</button>
+            </form>
+          </details>
+
+        {% elif can_act and order.status == 'Approved' %}
+          <form method="post" action="{{ url_for('processor.complete', order_number=order.order_number) }}" class="act-form">
+            <label class="small" for="cnote">Completion note (optional)</label>
+            <input id="cnote" name="note" type="text" maxlength="300" placeholder="Activation confirmed for all lines.">
+            <button class="btn btn-primary btn-block" type="submit">{{ icon('check', 14) }} Mark completed</button>
+          </form>
+        {% endif %}
+
+        {% if not can_act %}<div class="info-chip">{{ icon('lock', 13) }} Admin view is read-only</div>{% endif %}
+        {% if order.approved_by %}
+        <div class="success-box two">
+          <div><small>Approved by</small><b>{{ order.approved_by }}</b></div>
+          <div><small>Approved on</small><b>{{ order.approved_at|dt }}</b></div>
+        </div>{% endif %}
+      </div>
+    </section>
+  </aside>
+</div>
+{% endblock %}

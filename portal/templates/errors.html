@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="card empty-state">
+  <div class="empty-icon">{{ icon('alert', 26) }}</div>
+  <h1>{{ title }}</h1>
+  <p class="muted">{{ text }}</p>
+  <a class="btn btn-outline" href="{{ url_for('auth.index') }}">Back to dashboard</a>
+</div>
+{% endblock %}

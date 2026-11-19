@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}Help{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Help</h1><p class="muted">How reviewing works in this portal.</p></div></div>
+<section class="card"><div class="card-body">
+  <ol class="how">
+    <li><b>Start review.</b> Open a Submitted order and press <i>Start review</i>. It becomes Under Review.</li>
+    <li><b>Check.</b> Read each tab. Documents can be previewed when a real file was uploaded.</li>
+    <li><b>Approve.</b> Needs every required document. A reference ID such as REF-MVP-78422 is created automatically.</li>
+    <li><b>Or request an amendment.</b> Choose a category, the sections to fix and a clear reason. The dealer can then edit and resubmit the same order.</li>
+    <li><b>Complete.</b> After an approved order is activated, mark it completed.</li>
+  </ol>
+  <p class="muted small">Every action is written to the order's activity history with your name and the time.</p>
+</div></section>
+{% endblock %}

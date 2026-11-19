@@ -1,0 +1,49 @@
+{% from "_macros.html" import icon %}
+{% set tab = 'review' %}
+
+{% if not ready %}
+<div class="alert alert-error wz-banner">{{ icon('alert', 15) }}
+  This order is not ready to submit yet.
+  {% for n, errs in step_errors_all.items() if errs %}
+    <a class="link-strong" href="{{ url_for('wizard.edit', order_number=order.order_number, step=n) }}">Step {{ n }} needs attention</a>{{ ' &middot; '|safe if not loop.last }}
+  {% endfor %}
+  {% if b.required_uploaded != b.required_total %}
+    <a class="link-strong" href="{{ url_for('wizard.edit', order_number=order.order_number, step=4) }}">Step 4: {{ b.required_total - b.required_uploaded }} required document(s) missing</a>
+  {% endif %}
+</div>
+{% endif %}
+
+<section class="card">
+  <div class="card-head"><h2>Order type</h2>
+    <a class="link-strong small" href="{{ url_for('wizard.edit', order_number=order.order_number, step=1) }}">{{ icon('pencil', 12) }} Edit</a></div>
+  <div class="card-body fields-3">
+    <div><dt>Order Type</dt><dd>{{ order.order_type or '—' }}</dd></div>
+    <div><dt>Registration Type</dt><dd>{{ order.registration_type or '—' }}</dd></div>
+    <div><dt>Customer Type</dt><dd>{{ order.customer_type or '—' }}</dd></div>
+  </div>
+</section>
+{% with review_step = 2 %}{% include "dealer/_customer.html" %}{% endwith %}
+{% with review_step = 3 %}{% include "dealer/_subscription.html" %}{% endwith %}
+{% with review_step = 4 %}{% include "dealer/_documents.html" %}{% endwith %}
+{% with review_step = 5 %}{% include "dealer/_internal.html" %}{% endwith %}
+
+{# ---------- confirmation pop-up ---------- #}
+<dialog id="submit-dialog" class="dialog">
+  <form method="post" action="{{ url_for('wizard.submit', order_number=order.order_number) }}">
+    <h2>{{ 'Resubmit' if order.status == 'Amendment Required' else 'Submit' }} {{ order.order_number }}?</h2>
+    <p class="muted">After submitting, the order is locked while a processor reviews it.</p>
+    {% if order.status == 'Amendment Required' %}
+    <div class="fld"><label for="response">Your response to the processor <span class="req">*</span></label>
+      <textarea id="response" name="response" rows="3" maxlength="500" placeholder="Describe what you corrected."></textarea></div>
+    {% endif %}
+    <label class="check declaration">
+      <input type="checkbox" name="declaration" id="declaration">
+      I confirm the information and documents are accurate and I am authorised to submit this order.
+    </label>
+    <p class="fld-error" id="declaration-error" hidden>Please tick the declaration to continue.</p>
+    <div class="dialog-actions">
+      <button class="btn btn-outline" type="button" id="cancel-submit">Cancel</button>
+      <button class="btn btn-primary" type="submit" id="confirm-submit">{{ icon('send', 15) }} {{ 'Resubmit' if order.status == 'Amendment Required' else 'Submit order' }}</button>
+    </div>
+  </form>
+</dialog>

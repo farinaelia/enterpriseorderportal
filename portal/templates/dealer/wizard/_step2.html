@@ -1,0 +1,56 @@
+{% from "dealer/wizard/_fields.html" import field, select %}
+{% from "_macros.html" import icon %}
+<section class="card">
+  <div class="card-head"><h2>Customer type</h2></div>
+  <div class="card-body">
+    <div class="choice-grid two {{ 'has-error' if errors.customer_type }}">
+      {% for t in C.CUSTOMER_TYPES %}
+      {% set info = C.CUSTOMER_TYPE_INFO[t] %}
+      <label class="choice">
+        <input type="radio" name="customer_type" value="{{ t }}" {{ 'checked' if values.customer_type == t }}>
+        <span class="choice-icon">{{ icon(info[0], 20) }}</span>
+        <span class="choice-text"><b>{{ t }}</b><small>{{ info[1] }}</small></span>
+      </label>
+      {% endfor %}
+    </div>
+    {% if errors.customer_type %}<p class="fld-error">{{ errors.customer_type }}</p>{% endif %}
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-head"><h2>Company details</h2></div>
+  <div class="card-body">
+    <div class="fld-grid">
+      {{ field('company_name', 'Company name', values.company_name, errors.company_name, required=true, maxlength=120, cls='span-2') }}
+      {{ field('brn', 'New business registration number', values.brn, errors.brn, corp_star=true, sensitive='brn', hint='12 digits, e.g. 202601234567', inputmode='numeric') }}
+      {{ field('old_brn', 'Old business registration number', values.old_brn, errors.old_brn, hint='Optional. e.g. 123456-X') }}
+      {{ field('tin', 'Tax identification number (TIN)', values.tin, errors.tin, hint='Optional', maxlength=30) }}
+      {{ field('sst_no', 'Sales and service tax number', values.sst_no, errors.sst_no, hint='Optional. e.g. W10-1234-32000001') }}
+      {{ field('existing_account_no', 'Existing account number', values.existing_account_no, errors.existing_account_no, sensitive='account', hint='Optional', maxlength=20) }}
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-head"><h2>Correspondence address</h2></div>
+  <div class="card-body">
+    <div class="fld-grid">
+      {{ field('address', 'Address', values.address, errors.address, required=true, maxlength=200, cls='span-2') }}
+      {{ field('city', 'City / State', values.city, errors.city, required=true, maxlength=60) }}
+      {{ field('postcode', 'Postcode', values.postcode, errors.postcode, required=true, hint='5 digits', maxlength=5, inputmode='numeric') }}
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-head"><h2>Primary contact</h2></div>
+  <div class="card-body">
+    <div class="fld-grid">
+      {{ field('contact_name', 'Full name', values.contact_name, errors.contact_name, required=true, maxlength=100) }}
+      {{ field('contact_id_no', 'Identification number', values.contact_id_no, errors.contact_id_no, required=true, sensitive='id', hint='e.g. 900101-14-1234') }}
+      {{ field('contact_designation', 'Designation', values.contact_designation, errors.contact_designation, corp_star=true, maxlength=80) }}
+      {{ field('contact_phone', 'Phone number', values.contact_phone, errors.contact_phone, required=true, hint='e.g. 012-345 6789', type='tel') }}
+      {{ field('contact_email', 'Email address', values.contact_email, errors.contact_email, required=true, maxlength=120, type='email') }}
+    </div>
+  </div>
+</section>

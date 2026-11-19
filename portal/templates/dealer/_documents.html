@@ -1,0 +1,42 @@
+{# Supporting documents: progress bar + one row per document #}
+{% from "_macros.html" import icon %}
+{% set complete = b.required_uploaded == b.required_total %}
+{% set pct = (b.required_uploaded / b.required_total * 100)|round|int %}
+
+<section class="card">
+  <div class="card-head"><h2>Supporting documents</h2>{% if review_step %}<a class="link-strong small" href="{{ url_for('wizard.edit', order_number=order.order_number, step=review_step) }}">{{ icon('pencil', 12) }} Edit</a>{% endif %}</div>
+  <div class="card-body">
+    <div class="progress-box {{ 'complete' if complete }}">
+      <b class="small">{{ b.required_uploaded }} of {{ b.required_total }} required documents uploaded</b>
+      <div class="progress"><div class="progress-fill" style="width: {{ pct }}%"></div></div>
+    </div>
+
+    <ul class="doc-list">
+      {% for d in b.doc_rows %}
+      <li class="doc-row {{ 'missing' if not d.file }}">
+        <span class="doc-icon {{ 'bad' if not d.file }}">
+          {% if not d.file %}{{ icon('upload', 16) }}
+          {% elif d.file.file_type in ('JPG', 'PNG') %}{{ icon('image', 16) }}
+          {% else %}{{ icon('file', 16) }}{% endif %}
+        </span>
+        <div class="doc-info">
+          <b>{{ d.label }}</b>
+          <span class="req-tag {{ 'opt' if not d.required }}">{{ 'REQUIRED' if d.required else 'OPTIONAL' }}</span>
+          {% if d.file %}
+            <div class="muted small">{{ d.file.filename }} &middot; {{ d.file.file_type }} &middot; {{ '%.2f'|format(d.file.size_mb) }} MB &middot; Uploaded {{ d.file.uploaded_at|date }}</div>
+          {% else %}
+            <div class="bad small"><b>Missing &mdash; not uploaded</b></div>
+          {% endif %}
+        </div>
+        {% if d.file and d.file.stored_name %}
+          <a class="btn btn-outline btn-sm" target="_blank" rel="noopener"
+             href="{{ url_for(('dealer' if current_user.role == 'dealer' else current_user.role) ~ '.document_preview', order_number=order.order_number, doc_id=d.file.id) }}">{{ icon('eye', 14) }} Preview</a>
+        {% elif d.file %}
+          {# Sample data from the seed has no file on disk #}
+          <button type="button" class="btn btn-outline btn-sm" disabled title="Sample record: no file stored">{{ icon('eye', 14) }} Preview</button>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
